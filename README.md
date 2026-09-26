@@ -28,7 +28,7 @@ USPTO requires a free API key. This repository does not contain one.
 
 Until that secret exists, the workflow files a single setup issue instead of guessing.
 
-The review itself runs on GitHub Copilot inside Actions (`engine: copilot`). Your GitHub account needs Copilot available to this repository, and Actions has to be allowed to run. The run is weekday-capable every day at 14:15 UTC (10:15am US Eastern).
+The review itself runs on GitHub Copilot inside Actions, using `gpt-5-mini` so it stays on the models a normal Copilot plan can call. Change the `model:` line in the workflow if you want a larger model your plan includes. Actions has to be allowed to run. The run is every day at 14:15 UTC (10:15am US Eastern).
 
 ## Files
 

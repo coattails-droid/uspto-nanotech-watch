@@ -12,6 +12,7 @@ on:
   workflow_dispatch:
 timeout-minutes: 25
 engine: copilot
+model: gpt-5-mini
 strict: false
 network:
   allowed:
