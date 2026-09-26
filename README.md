@@ -19,25 +19,13 @@ Official nanotechnology classes are included automatically: CPC `B82B` / `B82Y`,
 
 ## What runs
 
-Two workflows run every day at 14:15 UTC (10:15am US Eastern). You can also start either one from the Actions tab.
+**Nanotech class alerts** runs every day at 14:15 UTC (10:15am US Eastern). It needs no AI. It files one issue for newly published applications and new grants in CPC `B82` or USPC class `977`, and assigns you.
 
-| Workflow | What it does |
-| --- | --- |
-| Nanotech class alerts | No AI. Files an issue for newly published applications and new grants in CPC `B82` or USPC class `977`, and assigns you. |
-| Nanotech patent watch | Copilot reads the remaining title matches (nanoparticles, graphene, quantum dots, and similar) and drops brand-name and measurement false alarms. |
+**Nanotech patent watch** is the Copilot review of borderline title matches. It is manual only. This account's Copilot plan rejects every model the agent can request, so a daily schedule was only producing failed runs. After Copilot includes `gpt-5-mini`, start it from the Actions tab.
 
-## One thing you still have to add
+The USPTO key is stored as the Actions secret `USPTO_API_KEY`. Class alerts read it. The agent does not.
 
-USPTO requires a free API key. This repository does not contain one.
-
-1. Sign in and create a key: [Open Data Portal getting started](https://data.uspto.gov/apis/getting-started).
-2. In this repository, open **Settings → Secrets and variables → Actions → New repository secret**.
-3. Name it exactly `USPTO_API_KEY` and paste the key.
-4. Open **Actions → Nanotech class alerts → Run workflow**.
-
-Until that secret exists, the class-alert workflow files a single setup issue instead of guessing.
-
-The agentic review also needs GitHub Copilot on this account. The first runs called Copilot and it rejected every model (`claude-sonnet-5`, `gpt-5.4-mini`, `claude-haiku-4.5`) as unavailable for the current plan. Enable Copilot, or a plan that includes `gpt-5-mini`, under **GitHub Settings → Copilot**, then run **Nanotech patent watch** again. Official `B82` / `977` alerts do not wait on that.
+The agent still cannot start: Copilot returned "model not supported" for `claude-sonnet-5`, `gpt-5.4-mini`, and `claude-haiku-4.5`. That is the plan on this GitHub account, not a bad patent query. Enable a Copilot plan that includes `gpt-5-mini`, then run **Nanotech patent watch** from Actions.
 
 ## Files
 

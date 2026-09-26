@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import os
 import sys
-import urllib.parse
 import urllib.request
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "coattails-droid/uspto-nanotech-watch")
@@ -36,10 +35,30 @@ def gh(method: str, path: str, body: dict | None = None) -> dict | list:
         return json.loads(raw) if raw else {}
 
 
+_known_text: str | None = None
+
+
+def known_text() -> str:
+    """Issue titles and bodies. The search API 403s for Actions tokens."""
+    global _known_text
+    if _known_text is not None:
+        return _known_text
+    chunks: list[str] = []
+    for page in range(1, 6):
+        batch = gh("GET", f"/repos/{REPO}/issues?state=all&per_page=100&page={page}")
+        if not isinstance(batch, list) or not batch:
+            break
+        for issue in batch:
+            chunks.append(str(issue.get("title") or ""))
+            chunks.append(str(issue.get("body") or ""))
+        if len(batch) < 100:
+            break
+    _known_text = "\n".join(chunks)
+    return _known_text
+
+
 def already_mentioned(needle: str) -> bool:
-    query = urllib.parse.quote(f'repo:{REPO} "{needle}" in:title,body')
-    found = gh("GET", f"/search/issues?q={query}&per_page=1")
-    return bool(isinstance(found, dict) and found.get("total_count"))
+    return needle in known_text()
 
 
 def create_issue(title: str, body: str) -> str:

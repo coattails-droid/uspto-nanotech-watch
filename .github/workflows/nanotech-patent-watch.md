@@ -7,8 +7,6 @@ intent: |
   Notify the repository owner about nanotechnology documents that newly
   appeared in the public USPTO record.
 on:
-  schedule:
-    - cron: "15 14 * * *"
   workflow_dispatch:
 timeout-minutes: 25
 engine: copilot
@@ -34,6 +32,8 @@ tools:
   cache-memory: true
 safe-outputs:
   report-failure-as-issue: false
+  threat-detection:
+    report-as-issue: false
   create-issue:
     title-prefix: "[nanotech] "
     labels: [nanotech-watch]
