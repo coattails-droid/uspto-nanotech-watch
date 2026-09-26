@@ -2,7 +2,7 @@
 
 A GitHub agentic workflow that reviews newly **published** US patent applications and newly **granted** patents, then opens an issue here when one is actually about nanotechnology.
 
-You are assigned on that issue, so GitHub notifies you.
+You are assigned on that issue, so GitHub notifies you. A separate daily mail summarizes the same issue: how many documents, who filed them, and which titles actually name a nano or quantum feature. B82Y 10/00 transistor patents stay in the issue but are not the lead of the email.
 
 ## What it can and cannot see
 

@@ -11,6 +11,7 @@ import json
 import os
 import sys
 import urllib.request
+from collections import Counter
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "coattails-droid/uspto-nanotech-watch")
 TOKEN = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN") or ""
@@ -59,6 +60,40 @@ def known_text() -> str:
 
 def already_mentioned(needle: str) -> bool:
     return needle in known_text()
+
+
+def digest(docs: list[dict], start: str, end: str, shown: int, truncated: bool) -> list[str]:
+    grants = sum(1 for doc in docs if doc.get("grantDate"))
+    orgs: Counter[str] = Counter()
+    highlights = []
+    for doc in docs:
+        applicants = doc.get("applicants") or []
+        if applicants:
+            orgs[str(applicants[0])] += 1
+        title = str(doc.get("title") or "")
+        if any(word in title.lower() for word in ("nano", "quantum", "graphene", "fullerene", "particle")):
+            number = doc.get("patentNumber") or doc.get("earliestPublicationNumber") or doc.get("applicationNumber")
+            highlights.append(f"- {title} ({number})")
+    lines = [
+        "## Digest",
+        f"{len(docs)} document(s) in CPC B82 or USPC 977 between {start} and {end}.",
+        f"{grants} have a grant date. {len(docs) - grants} do not, so they are publications rather than new grants.",
+    ]
+    if orgs:
+        top = ", ".join(f"{name} ({count})" for name, count in orgs.most_common(5))
+        lines.append(f"Most frequent applicants: {top}.")
+    lines.append("")
+    if highlights:
+        lines.append("Titles that name a nano or quantum feature:")
+        lines.extend(highlights[:12])
+        lines.append("")
+    lines.append(
+        "B82Y 10/00 is the nanoelectronics class and often includes ordinary transistor patents. The titles above are the ones that say what the nanotechnology is."
+    )
+    if truncated or len(docs) > shown:
+        lines.append(f"The first {shown} of {len(docs)} are listed below.")
+    lines.append("")
+    return lines
 
 
 def create_issue(title: str, body: str) -> str:
@@ -162,11 +197,11 @@ def main() -> int:
     start = window.get("from", "")
     end = window.get("to", "")
     title = f"[nanotech] {end}: {len(official)} official nanotech document(s)"
-    body = [
-        f"Newly granted or published between {start} and {end}, classified in CPC B82 or USPC 977.",
-        "",
-    ]
-    body.extend(document_lines(item) + "\n" for item in official[:25])
+    shown = 25
+    body = digest(official, start, end, shown, bool(payload.get("truncated")))
+    body.append(f"Newly granted or published between {start} and {end}, classified in CPC B82 or USPC 977.")
+    body.append("")
+    body.extend(document_lines(item) + "\n" for item in official[:shown])
     if payload.get("truncated") or len(official) > 25:
         body.append("This list may be incomplete. The next run overlaps the same few days.")
     body.append(
