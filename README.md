@@ -19,7 +19,7 @@ Official nanotechnology classes are included automatically: CPC `B82B` / `B82Y`,
 
 ## What runs
 
-**Nanotech class alerts** runs every day at 14:15 UTC (10:15am US Eastern). It needs no AI. It files one issue for newly published applications and new grants in CPC `B82` or USPC class `977`, and assigns you.
+**Nanotech class alerts** runs every day at 8:30am US Eastern Daylight Time (12:30 UTC). It needs no AI. It files one issue for newly published applications and new grants in CPC `B82` or USPC class `977`, and assigns you. The email follows a minute or two later. After the clocks change in November, this same schedule is 7:30am Eastern until it is shifted.
 
 **Nanotech patent watch** is the Copilot review of borderline title matches. It is manual only. This account's Copilot plan rejects every model the agent can request, so a daily schedule was only producing failed runs. After Copilot includes `gpt-5-mini`, start it from the Actions tab.
 

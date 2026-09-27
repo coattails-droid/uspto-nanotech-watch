@@ -1,7 +1,7 @@
 name: Nanotech class alerts
 on:
   schedule:
-    - cron: "15 14 * * *"
+    - cron: "30 12 * * *"
   workflow_dispatch:
 
 permissions:
