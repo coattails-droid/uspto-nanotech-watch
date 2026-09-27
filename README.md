@@ -15,7 +15,7 @@ The Patent Office does not make most new filings public on the day they are file
 
 The watcher uses the official [USPTO Open Data Portal](https://data.uspto.gov/), which refreshes daily. Each run looks at grants and publications from the last 4 days, so a missed day is picked up on the next run.
 
-Official nanotechnology classes are included automatically: CPC `B82B` / `B82Y`, and USPC class `977`. Other candidates (nanoparticles, nanotubes, graphene, quantum dots, and similar) are read by the agent, which drops brand-name and measurement false alarms.
+The daily job reviews candidates itself. Copilot is not required. It keeps B82B, USPC 977, B82Y groups other than `10/00`, and titles that name a nanoparticle, nanotube, graphene, quantum dot, or a similar structure. A patent whose only nano mark is `B82Y 10/00` is set aside.
 
 ## What runs
 

@@ -62,7 +62,49 @@ def already_mentioned(needle: str) -> bool:
     return needle in known_text()
 
 
-def digest(docs: list[dict], start: str, end: str, shown: int, truncated: bool) -> list[str]:
+NANO_TITLE = (
+    "nanoparticle",
+    "nanotube",
+    "nanowire",
+    "nanofiber",
+    "nanofibre",
+    "graphene",
+    "fullerene",
+    "nanocomposite",
+    "nanostructure",
+    "nanocrystal",
+    "nanomedicine",
+    "nanoimprint",
+    "quantum dot",
+    "nanosheet",
+    "nanoribbon",
+    "nanorod",
+    "nanopore",
+    "nanocluster",
+)
+FALSE_TITLE = ("nanosecond", "nanogram", "nanobody", "nanoantibody", "nano antibody")
+
+
+def review(item: dict) -> bool:
+    """Same include and exclude rules the Copilot review was going to apply."""
+    title = str(item.get("title") or "").lower()
+    if any(bad in title for bad in FALSE_TITLE):
+        return False
+    codes = [str(code).upper().replace(" ", "") for code in (item.get("cpcNano") or [])]
+    uspc = str(item.get("uspc") or "").upper().replace(" ", "")
+    titled = any(word in title for word in NANO_TITLE)
+    if uspc.startswith("977"):
+        return True
+    if any(code.startswith("B82B") for code in codes):
+        return True
+    if any(code.startswith("B82") and not code.startswith("B82Y10") for code in codes):
+        return True
+    if titled:
+        return True
+    return False
+
+
+def digest(docs: list[dict], start: str, end: str, shown: int, truncated: bool, dropped: int) -> list[str]:
     grants = sum(1 for doc in docs if doc.get("grantDate"))
     orgs: Counter[str] = Counter()
     highlights = []
@@ -76,7 +118,7 @@ def digest(docs: list[dict], start: str, end: str, shown: int, truncated: bool) 
             highlights.append(f"- {title} ({number})")
     lines = [
         "## Digest",
-        f"{len(docs)} document(s) in CPC B82 or USPC 977 between {start} and {end}.",
+        f"{len(docs)} document(s) kept between {start} and {end} after a rules review, without Copilot.",
         f"{grants} have a grant date. {len(docs) - grants} do not, so they are publications rather than new grants.",
     ]
     if orgs:
@@ -88,8 +130,10 @@ def digest(docs: list[dict], start: str, end: str, shown: int, truncated: bool) 
         lines.extend(highlights[:12])
         lines.append("")
     lines.append(
-        "B82Y 10/00 is the nanoelectronics class and often includes ordinary transistor patents. The titles above are the ones that say what the nanotechnology is."
+        "Kept when the class is B82B, USPC 977, or a B82Y group other than 10/00, or when the title names a nanoparticle, nanotube, graphene, quantum dot, or a similar structure. Set aside when the only signal is B82Y 10/00 on an ordinary chip patent, or when nano is only a unit or an antibody name."
     )
+    if dropped:
+        lines.append(f"Set aside {dropped} other candidate(s) under those rules.")
     if truncated or len(docs) > shown:
         lines.append(f"The first {shown} of {len(docs)} are listed below.")
     lines.append("")
@@ -118,9 +162,9 @@ Create a free Open Data Portal key, then save it as an Actions secret:
 1. Sign in at https://data.uspto.gov/apis/getting-started and create an API key.
 2. In this repository open Settings, then Secrets and variables, then Actions.
 3. Add a secret named exactly `USPTO_API_KEY`.
-4. Re-run **Nanotech class alerts** and **Nanotech patent watch**.
+4. Re-run **Nanotech class alerts**.
 
-The class-alert workflow notifies you about new grants and publications in CPC B82 or USPC class 977. The agentic workflow reviews borderline title matches, and it needs GitHub Copilot enabled for this account as well.
+The daily review does not use Copilot. It keeps B82B, USPC 977, B82Y groups other than 10/00, and titles that name a real nanostructure. B82Y 10/00 chip patents are set aside.
 
 This is the public USPTO record. Most applications are published about 18 months after filing, and provisional applications are not published.
 """
@@ -177,9 +221,10 @@ def main() -> int:
 
     window = payload.get("window") or {}
     official = []
+    dropped = 0
     for item in payload.get("documents") or []:
         reason = item.get("matchedBy") or ""
-        if "cpc" not in reason and "uspc" not in reason:
+        if "cpc" not in reason and "uspc" not in reason and "title" not in reason:
             continue
         keys = [
             item.get("applicationNumber"),
@@ -188,17 +233,20 @@ def main() -> int:
         ]
         if any(key and already_mentioned(str(key)) for key in keys):
             continue
+        if not review(item):
+            dropped += 1
+            continue
         official.append(item)
 
     if not official:
-        print(f"no new official nanotech documents ({error or 'ok'})")
+        print(f"no new nanotech documents after review ({error or 'ok'}, set aside {dropped})")
         return 0
 
     start = window.get("from", "")
     end = window.get("to", "")
-    title = f"[nanotech] {end}: {len(official)} official nanotech document(s)"
+    title = f"[nanotech] {end}: {len(official)} nanotech document(s)"
     shown = 25
-    body = digest(official, start, end, shown, bool(payload.get("truncated")))
+    body = digest(official, start, end, shown, bool(payload.get("truncated")), dropped)
     body.append(f"Newly granted or published between {start} and {end}, classified in CPC B82 or USPC 977.")
     body.append("")
     body.extend(document_lines(item) + "\n" for item in official[:shown])
